@@ -30,4 +30,5 @@ protected:
 
 	// Called when Intaract input
 	void InteractToActor();
+
 };

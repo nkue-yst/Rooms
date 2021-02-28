@@ -16,13 +16,16 @@ enum class EDoorState : uint8
 };
 
 UCLASS()
-class ADoorBase : public AActor, public ICPP_CharacterInterface
+class ACPP_DoorBase : public AActor, public ICPP_CharacterInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ADoorBase();
+	ACPP_DoorBase();
+
+	UFUNCTION(BlueprintPure)
+	EDoorState GetDoorState() const { return DoorState; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -35,6 +38,10 @@ protected:
 	// Called when do action to door
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void InteractDoor(bool IsForward);
+
+	// Called when change the level
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void ChangeLevel();
 
 	// Called when front collision begin overlap
 	UFUNCTION()
@@ -74,13 +81,12 @@ protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Gimmick")
 	TArray<TSoftObjectPtr<class UWorld>> DestLevelsBackward;
 
-	// Door Rotation definition
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DoorMovement")
-	FRotator ForwardOpenedRot;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Gimmick")
+	bool bCanChangeLevel;
 
-	// Door opening state
+	// Door Rotation definition
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "State")
-	EDoorState DoorState;
+	FRotator ForwardOpenedRot;
 
 	// Is player in front of door
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "State")
@@ -90,9 +96,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	bool bIsRotating;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Gimmick")
-	bool bCanChangeLevel;
-
 	// Sound of opening the door
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundBase* OpeningSound;
@@ -100,6 +103,16 @@ protected:
 	// Sound of closing the door
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	class USoundBase* ClosingSound;
+
+	// Door opening state
+	EDoorState DoorState;
+
+	// Current level index
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Index")
+	int LevelForwardIdx;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Index")
+	int LevelBackwardIdx;
 
 	/* Implementation interface function */
 	// Called when interacted from character

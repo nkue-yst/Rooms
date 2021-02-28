@@ -10,4 +10,8 @@ ACPP_GameModeBase::ACPP_GameModeBase(const FObjectInitializer& ObjectInitializer
     static ConstructorHelpers::FClassFinder<APawn> PawnClass(TEXT("/Game/Blueprints/Character/BP_PlayerCharacter"));
     if (PawnClass.Succeeded())
         DefaultPawnClass = PawnClass.Class;
+
+    static ConstructorHelpers::FClassFinder<AController> ControllerClass(TEXT("/Game/Blueprints/Character/BP_PlayerController"));
+    if (ControllerClass.Succeeded())
+        PlayerControllerClass = ControllerClass.Class;
 }

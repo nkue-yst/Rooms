@@ -8,13 +8,15 @@
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
-ADoorBase::ADoorBase()
-	: ForwardOpenedRot(0.f, 100.f, 0.f)
+ACPP_DoorBase::ACPP_DoorBase()
+	: bCanChangeLevel(true)
+	, ForwardOpenedRot(0.f, 100.f, 0.f)
 	, bIsInFront(true)
 	, bIsRotating(false)
-	, bCanChangeLevel(true)
 	, OpeningSound(nullptr)
 	, ClosingSound(nullptr)
+	, LevelForwardIdx(0)
+	, LevelBackwardIdx(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -32,43 +34,31 @@ ADoorBase::ADoorBase()
 	FrontCollision->SetupAttachment(DoorFrameMesh);
 	FrontCollision->InitBoxExtent(FVector(100.f, 35.f, 100.f));
 	FrontCollision->SetRelativeLocation(FVector(0.f, 90.f, 100.f));
-	FrontCollision->OnComponentBeginOverlap.AddDynamic(this, &ADoorBase::OnFrontBeginOverlap);
+	FrontCollision->OnComponentBeginOverlap.AddDynamic(this, &ACPP_DoorBase::OnFrontBeginOverlap);
 
 	BehindCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BehindBoxCollision"));
 	BehindCollision->SetupAttachment(DoorFrameMesh);
 	BehindCollision->InitBoxExtent(FVector(100.f, 35.f, 100.f));
 	BehindCollision->SetRelativeLocation(FVector(0.f, -90.f, 100.f));
-	BehindCollision->OnComponentBeginOverlap.AddDynamic(this, &ADoorBase::OnBehindBeginOverlap);
+	BehindCollision->OnComponentBeginOverlap.AddDynamic(this, &ACPP_DoorBase::OnBehindBeginOverlap);
 
 }
 
 // Called when the game starts or when spawned
-void ADoorBase::BeginPlay()
+void ACPP_DoorBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Load initial levels
-	if (DestLevelsForward.IsValidIndex(0))
-	{
-		FLatentActionInfo LatentInfo;
-		UGameplayStatics::LoadStreamLevelBySoftObjectPtr(this, DestLevelsForward[0], true, true, LatentInfo);
-	}
-
-	if (DestLevelsBackward.IsValidIndex(0))
-	{
-		FLatentActionInfo LatentInfo;
-		UGameplayStatics::LoadStreamLevelBySoftObjectPtr(this, DestLevelsBackward[0], true, true, LatentInfo);
-	}
 }
 
 // Door open and close
-void ADoorBase::RotateDoor(float RotateAlpha)
+void ACPP_DoorBase::RotateDoor(float RotateAlpha)
 {
 	DoorMesh->SetRelativeRotation(RotateAlpha * ForwardOpenedRot);
 }
 
 // Called when front collision begin overlap
-void ADoorBase::OnFrontBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ACPP_DoorBase::OnFrontBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (UGameplayStatics::GetPlayerPawn(this, 0) == OtherActor)
 	{
@@ -77,7 +67,7 @@ void ADoorBase::OnFrontBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 }
 
 // Called when behind collision begin overlap
-void ADoorBase::OnBehindBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ACPP_DoorBase::OnBehindBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (UGameplayStatics::GetPlayerPawn(this, 0) == OtherActor)
 	{
@@ -85,7 +75,7 @@ void ADoorBase::OnBehindBeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	}
 }
 
-void ADoorBase::BeginDoorRotation()
+void ACPP_DoorBase::BeginDoorRotation()
 {
 	bIsRotating = true;
 	switch (DoorState)
@@ -107,17 +97,17 @@ void ADoorBase::BeginDoorRotation()
 	}
 }
 
-void ADoorBase::EndDoorRotation()
+void ACPP_DoorBase::EndDoorRotation()
 {
 	bIsRotating = false;
-	if (DoorState == EDoorState::Closed)
+	if (DoorState == EDoorState::Closed && bCanChangeLevel)
 	{
-
+		ChangeLevel();
 	}
 }
 
 // Called when interacted from character
-void ADoorBase::Interact_Implementation()
+void ACPP_DoorBase::Interact_Implementation()
 {
 	if (bIsRotating)
 		return;
