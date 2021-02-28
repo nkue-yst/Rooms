@@ -1,0 +1,11 @@
+Binaries/
+Config/
+Content/
+DeriverdDataCache/
+Intermediate/
+*.png
+*.sln
+*.uproject
+Saved/
+Script/
+.vs/
